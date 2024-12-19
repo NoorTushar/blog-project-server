@@ -1,5 +1,5 @@
 {
-   "name": "mongoose-eslint-starter-template",
+   "name": "blog-project-server",
    "version": "1.0.0",
    "main": "index.js",
    "scripts": {
