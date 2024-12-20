@@ -8,16 +8,9 @@ const createBlogIntoDB = async (payload: TBlog) => {
 };
 
 const getAllBlogsFromDB = async (query: Record<string, unknown>) => {
-   console.log(query);
+   const queryObj = { ...query };
 
    const search = query?.search || "";
-
-   //    const result = await BlogModel.find({
-   //       $or: [
-   //          { title: { $regex: search, $options: "i" } },
-   //          { content: { $regex: search, $options: "i" } },
-   //       ],
-   //    }).populate("author");
 
    const searchQuery = BlogModel.find({
       $or: blogSearchTerms.map((term) => {
@@ -25,9 +18,17 @@ const getAllBlogsFromDB = async (query: Record<string, unknown>) => {
             [term]: { $regex: search, $options: "i" },
          };
       }),
-   }).populate("author");
+   });
 
-   const result = await searchQuery;
+   const excludeFields = ["search"];
+
+   excludeFields.forEach((field) => delete queryObj[field]);
+   console.log({ queryObj });
+   console.log({ query });
+
+   const filter = query.filter ? { _id: query.filter } : {};
+
+   const result = await searchQuery.find(filter);
 
    return result;
 };
