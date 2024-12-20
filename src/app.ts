@@ -1,5 +1,6 @@
 import express, { Response, Request, Application } from "express";
 import cors from "cors";
+import notFound from "./app/middlewares/notFound";
 
 const app: Application = express();
 
@@ -16,6 +17,6 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 //Not Found
-// app.use(notFound);
+app.use(notFound);
 
 export default app;
