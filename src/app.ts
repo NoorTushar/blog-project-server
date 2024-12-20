@@ -1,6 +1,7 @@
 import express, { Response, Request, Application } from "express";
 import cors from "cors";
 import notFound from "./app/middlewares/notFound";
+import router from "./app/routes";
 
 const app: Application = express();
 
@@ -10,7 +11,7 @@ app.use(express.raw());
 app.use(express.text());
 app.use(cors());
 
-// app.use("/api/v1/students", StudentRoutes);
+app.use("/api", router);
 
 app.get("/", (req: Request, res: Response) => {
    res.send("Hello From the Blog Site ⚡️⚡️");
