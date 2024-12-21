@@ -1,6 +1,21 @@
 import httpStatus from "http-status";
 import AppError from "../../errors/AppError";
 import { BlogModel } from "../blog/blog.model";
+import { UserModel } from "../user/user.model";
+
+const blockUserFromDB = async (id: string) => {
+   const user = await UserModel.findById(id);
+
+   if (!user) {
+      throw new AppError(
+         httpStatus.NOT_FOUND,
+         "The user you are trying to block, does not exist"
+      );
+   }
+
+   const result = await UserModel.findByIdAndUpdate(id, { isBlocked: true });
+   return result;
+};
 
 const deleteBlogFromDB = async (id: string) => {
    // the blog to be deleted
@@ -20,5 +35,6 @@ const deleteBlogFromDB = async (id: string) => {
 };
 
 export const AdminServices = {
+   blockUserFromDB,
    deleteBlogFromDB,
 };
