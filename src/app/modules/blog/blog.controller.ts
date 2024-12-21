@@ -4,7 +4,7 @@ import sendResponse from "../../utils/sendResponse";
 import { BlogServices } from "./blog.service";
 
 const createBlog = catchAsync(async (req, res) => {
-   const result = await BlogServices.createBlogIntoDB(req.body);
+   const result = await BlogServices.createBlogIntoDB(req.user, req.body);
 
    sendResponse(res, {
       data: result,
@@ -35,7 +35,11 @@ const getSingleBlog = catchAsync(async (req, res) => {
 });
 
 const updateBlog = catchAsync(async (req, res) => {
-   const result = await BlogServices.updateBlogIntoDB(req.params.id, req.body);
+   const result = await BlogServices.updateBlogIntoDB(
+      req.user,
+      req.params.id,
+      req.body
+   );
    sendResponse(res, {
       data: result,
       statusCode: httpStatus.OK,

@@ -6,9 +6,22 @@ import { UserModel } from "../user/user.model";
 import AppError from "../../errors/AppError";
 import httpStatus from "http-status";
 
-const createBlogIntoDB = async (payload: TBlog) => {
+const createBlogIntoDB = async (decodedUser: JwtPayload, payload: TBlog) => {
+   const { email } = decodedUser;
+
+   const author = await UserModel.findOne({ email });
+
+   if (!author) {
+      throw new AppError(httpStatus.NOT_FOUND, "Author not found");
+   }
+
+   const authorId = author?._id;
+
+   payload.author = authorId;
+
    const result = await BlogModel.create(payload);
    return result;
+   // return null;
 };
 
 const getAllBlogsFromDB = async (query: Record<string, unknown>) => {
@@ -42,7 +55,11 @@ const getSingleBlogFromDB = async (id: string) => {
    return result;
 };
 
-const updateBlogIntoDB = async (id: string, payload: Partial<TBlog>) => {
+const updateBlogIntoDB = async (
+   decodedUser: JwtPayload,
+   id: string,
+   payload: Partial<TBlog>
+) => {
    // the blog to be updated
    const blog = await BlogModel.findById(id);
    if (!blog) {
@@ -52,7 +69,22 @@ const updateBlogIntoDB = async (id: string, payload: Partial<TBlog>) => {
       );
    }
 
+   // check if the id found in decoded user matches with the id to be edited
+   const user = await UserModel.findOne({ email: decodedUser.email });
+   const userId = user?._id;
+
    // Allows a logged-in user to update their own blog by its ID.
+
+   const authorId = blog.author;
+
+   const matchedUserAndAuthor = userId?.equals(authorId);
+
+   if (!matchedUserAndAuthor) {
+      throw new AppError(
+         httpStatus.FORBIDDEN,
+         "You are trying to update another user's blog"
+      );
+   }
 
    const result = await BlogModel.findByIdAndUpdate(id, payload, {
       new: true,

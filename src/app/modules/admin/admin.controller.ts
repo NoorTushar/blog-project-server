@@ -15,6 +15,7 @@ const blockUser = catchAsync(async (req, res) => {
       message: "User blocked successfully",
    });
 });
+
 const deleteBlog = catchAsync(async (req, res) => {
    const result = await AdminServices.deleteBlogFromDB(req.params.id);
 
