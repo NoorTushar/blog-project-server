@@ -16,7 +16,7 @@ const getAllBlogsFromDB = async (query: Record<string, unknown>) => {
             [term]: { $regex: search, $options: "i" },
          };
       }),
-   });
+   }).populate("author");
 
    // filter: Filters blogs authored by the user with the given authorId.
    const filter = query?.filter ? { author: query.filter } : {};
@@ -38,8 +38,20 @@ const getSingleBlogFromDB = async (id: string) => {
    return result;
 };
 
+const updateBlogIntoDB = async (id: string, payload: Partial<TBlog>) => {
+   // Allows a logged-in user to update their own blog by its ID.
+
+   const result = await BlogModel.findByIdAndUpdate(id, payload, {
+      new: true,
+      runValidators: true,
+   });
+
+   return result;
+};
+
 export const BlogServices = {
    createBlogIntoDB,
    getAllBlogsFromDB,
    getSingleBlogFromDB,
+   updateBlogIntoDB,
 };
