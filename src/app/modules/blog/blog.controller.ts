@@ -44,9 +44,21 @@ const updateBlog = catchAsync(async (req, res) => {
    });
 });
 
+const deleteBlog = catchAsync(async (req, res) => {
+   // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
+   const result = await BlogServices.deleteBlogFromDB(req.params.id);
+   sendResponse(res, {
+      // data: result,
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Blog deleted successfully",
+   });
+});
+
 export const BlogController = {
    createBlog,
    getAllBlogs,
    getSingleBlog,
    updateBlog,
+   deleteBlog,
 };

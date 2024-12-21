@@ -49,9 +49,17 @@ const updateBlogIntoDB = async (id: string, payload: Partial<TBlog>) => {
    return result;
 };
 
+const deleteBlogFromDB = async (id: string) => {
+   // Allows a logged-in user to delete their own blog by its ID.
+   const result = await BlogModel.findByIdAndDelete(id);
+
+   return result;
+};
+
 export const BlogServices = {
    createBlogIntoDB,
    getAllBlogsFromDB,
    getSingleBlogFromDB,
    updateBlogIntoDB,
+   deleteBlogFromDB,
 };
