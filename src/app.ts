@@ -95,14 +95,21 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
       };
    };
 
-   const handleDuplicateError = (err: mongoose.Error.CastError) => {
+   const handleDuplicateError = (err: any) => {
       const statusCode = 400;
-      const message = "Duplicate Key";
+      const message = "Duplicate value";
+      console.log("duplicate error: ", err.errorResponse.errmsg);
+
+      // Extract value within double quotes using regex
+      const match = err.errorResponse.errmsg.match(/"([^"]*)"/);
+
+      // The extracted value will be in the first capturing group
+      const extractedMessage = match && match[1];
 
       const error = {
          details: {
-            path: err.path,
-            message: err.message,
+            path: "",
+            message: `${extractedMessage} already exists.`,
          },
       };
 
@@ -126,6 +133,11 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
       error = simplifiedError.error;
    } else if (err.name === "CastError") {
       const simplifiedError = handleCastError(err);
+      statusCode = simplifiedError.statusCode;
+      message = simplifiedError.message;
+      error = simplifiedError.error;
+   } else if (err?.code === 11000) {
+      const simplifiedError = handleDuplicateError(err);
       statusCode = simplifiedError.statusCode;
       message = simplifiedError.message;
       error = simplifiedError.error;
