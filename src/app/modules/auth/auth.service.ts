@@ -3,6 +3,8 @@ import AppError from "../../errors/AppError";
 import { UserModel } from "../user/user.model";
 import { TLoginUser } from "./auth.interface";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import config from "../../config";
 
 const loginUserFromDB = async (payload: TLoginUser) => {
    console.log({ payload });
@@ -31,7 +33,18 @@ const loginUserFromDB = async (payload: TLoginUser) => {
       throw new AppError(httpStatus.FORBIDDEN, "Incorrect Password");
    }
 
-   return {};
+   // generate JWT Token:
+   const jwtPayload = { email: user.email, role: user.role };
+
+   const accessToken = jwt.sign(
+      jwtPayload,
+      config.jwt_access_secret as string,
+      {
+         expiresIn: "30d",
+      }
+   );
+
+   return { token: accessToken };
 };
 
 export const AuthServices = {
