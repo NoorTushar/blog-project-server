@@ -44,7 +44,7 @@ const getAllBlogsFromDB = (query) => __awaiter(void 0, void 0, void 0, function*
     const filter = (query === null || query === void 0 ? void 0 : query.filter) ? { author: query.filter } : {};
     const filterQuery = searchQuery.find(filter);
     // sortOrder: Defines the sorting order. Accepts values asc (ascending) or desc (descending). (e.g., sortOrder=desc).
-    let sortStr = "";
+    let sortStr;
     if ((query === null || query === void 0 ? void 0 : query.sortBy) && (query === null || query === void 0 ? void 0 : query.sortOrder)) {
         const sortBy = query === null || query === void 0 ? void 0 : query.sortBy;
         const sortOrder = query === null || query === void 0 ? void 0 : query.sortOrder;
