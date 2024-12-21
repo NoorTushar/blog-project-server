@@ -1,6 +1,10 @@
+import { JwtPayload } from "jsonwebtoken";
 import { blogSearchTerms } from "./blog.constants";
 import { TBlog } from "./blog.interface";
 import { BlogModel } from "./blog.model";
+import { UserModel } from "../user/user.model";
+import AppError from "../../errors/AppError";
+import httpStatus from "http-status";
 
 const createBlogIntoDB = async (payload: TBlog) => {
    const result = await BlogModel.create(payload);
@@ -49,11 +53,40 @@ const updateBlogIntoDB = async (id: string, payload: Partial<TBlog>) => {
    return result;
 };
 
-const deleteBlogFromDB = async (id: string) => {
+const deleteBlogFromDB = async (decodedUser: JwtPayload, id: string) => {
+   // the blog to be deleted
+   const blog = await BlogModel.findById(id);
+   if (!blog) {
+      throw new AppError(
+         httpStatus.NOT_FOUND,
+         "The blog you are trying to delete, does not exist"
+      );
+   }
+
+   // check if the id found in decoded user matches with the id to be deleted
+   const user = await UserModel.findOne({ email: decodedUser.email });
+
+   const userId = user?._id;
+
+   // if the role is user, check if the right user is deleting their blog
+   if (user?.role === "user") {
+      const authorId = blog.author;
+
+      const matchedUserAndAuthor = userId?.equals(authorId);
+
+      if (!matchedUserAndAuthor) {
+         throw new AppError(
+            httpStatus.FORBIDDEN,
+            "You are trying to delete another user's blog"
+         );
+      }
+   }
+
    // Allows a logged-in user to delete their own blog by its ID.
    const result = await BlogModel.findByIdAndDelete(id);
 
    return result;
+   // return null;
 };
 
 export const BlogServices = {
