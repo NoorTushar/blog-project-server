@@ -57,6 +57,13 @@ const getAllBlogsFromDB = async (query: Record<string, unknown>) => {
 
 const getSingleBlogFromDB = async (id: string) => {
    const result = await BlogModel.findById(id).populate("author");
+
+   if (!result) {
+      throw new AppError(
+         httpStatus.NOT_FOUND,
+         "There is no blog under this Id"
+      );
+   }
    return result;
 };
 

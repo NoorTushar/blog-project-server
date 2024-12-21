@@ -24,16 +24,19 @@ app.get("/", (req: Request, res: Response) => {
    res.send("Hello From the Blog Site ⚡️⚡️");
 });
 
-// app.use(globalErrorHandler);
-
-app.use((err: any, req: Request, res: Response, next) => {
+// Error-handling middleware
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
    let statusCode = err.statusCode || 400;
-   let message = err.message || "something went wrong";
-   let error = {
-      details: {
-         path: "",
-         message: err?.message || "Something went wrong",
-      },
+   let message = err.message || "Something went wrong";
+   let error: {
+      details: { path: string | number; message: string }[]; // Updated to handle an array
+   } = {
+      details: [
+         {
+            path: "",
+            message: err?.message || "Something went wrong",
+         },
+      ],
    };
 
    const handleZodError = (err: ZodError) => {
@@ -42,7 +45,7 @@ app.use((err: any, req: Request, res: Response, next) => {
       const error = {
          details: err.issues.map((issue: ZodIssue) => {
             return {
-               path: issue.path[issue.path.length - 1],
+               path: issue.path[issue.path.length - 1], // Ensures compatibility with `string | number`
                message: issue.message,
             };
          }),
@@ -59,12 +62,48 @@ app.use((err: any, req: Request, res: Response, next) => {
       const message = "Validation Error";
 
       const error = {
-         details: Object.values(err.errors).map((value) => {
+         details: Object.values(err.errors).map((value: any) => {
             return {
                path: value.path,
                message: value.message,
             };
          }),
+      };
+
+      return {
+         statusCode,
+         message,
+         error,
+      };
+   };
+
+   const handleCastError = (err: mongoose.Error.CastError) => {
+      const statusCode = 400;
+      const message = "Invalid Id";
+
+      const error = {
+         details: {
+            path: err.path,
+            message: err.message,
+         },
+      };
+
+      return {
+         statusCode,
+         message,
+         error,
+      };
+   };
+
+   const handleDuplicateError = (err: mongoose.Error.CastError) => {
+      const statusCode = 400;
+      const message = "Duplicate Key";
+
+      const error = {
+         details: {
+            path: err.path,
+            message: err.message,
+         },
       };
 
       return {
@@ -85,9 +124,15 @@ app.use((err: any, req: Request, res: Response, next) => {
       statusCode = simplifiedError.statusCode;
       message = simplifiedError.message;
       error = simplifiedError.error;
+   } else if (err.name === "CastError") {
+      const simplifiedError = handleCastError(err);
+      statusCode = simplifiedError.statusCode;
+      message = simplifiedError.message;
+      error = simplifiedError.error;
    }
-   //ultimate return
-   return res.status(err?.statusCode || statusCode).json({
+
+   // Ultimate return
+   res.status(err?.statusCode || statusCode).json({
       success: false,
       message,
       statusCode,
@@ -97,7 +142,7 @@ app.use((err: any, req: Request, res: Response, next) => {
    });
 });
 
-//Not Found
+// Not Found
 app.use(notFound);
 
 export default app;
