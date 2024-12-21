@@ -8,6 +8,7 @@ import router from "./app/routes";
 import httpStatus from "http-status";
 import globalErrorHandler from "./app/middlewares/globalErrorHandler";
 import { ZodError, ZodIssue } from "zod";
+import mongoose from "mongoose";
 
 const app: Application = express();
 
@@ -53,14 +54,40 @@ app.use((err: any, req: Request, res: Response, next) => {
       };
    };
 
+   const handleValidationError = (err: mongoose.Error.ValidationError) => {
+      const statusCode = 400;
+      const message = "Validation Error";
+
+      const error = {
+         details: Object.values(err.errors).map((value) => {
+            return {
+               path: value.path,
+               message: value.message,
+            };
+         }),
+      };
+
+      return {
+         statusCode,
+         message,
+         error,
+      };
+   };
+
    if (err instanceof ZodError) {
       const simplifiedError = handleZodError(err);
+
+      statusCode = simplifiedError.statusCode;
+      message = simplifiedError.message;
+      error = simplifiedError.error;
+   } else if (err?.name === "ValidationError") {
+      const simplifiedError = handleValidationError(err);
       statusCode = simplifiedError.statusCode;
       message = simplifiedError.message;
       error = simplifiedError.error;
    }
    //ultimate return
-   return res.status(err?.statusCode || httpStatus.INTERNAL_SERVER_ERROR).json({
+   return res.status(err?.statusCode || statusCode).json({
       success: false,
       message,
       statusCode,
