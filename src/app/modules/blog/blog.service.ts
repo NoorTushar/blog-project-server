@@ -109,17 +109,16 @@ const deleteBlogFromDB = async (decodedUser: JwtPayload, id: string) => {
    const userId = user?._id;
 
    // if the role is user, check if the right user is deleting their blog
-   if (user?.role === "user") {
-      const authorId = blog.author;
 
-      const matchedUserAndAuthor = userId?.equals(authorId);
+   const authorId = blog.author;
 
-      if (!matchedUserAndAuthor) {
-         throw new AppError(
-            httpStatus.FORBIDDEN,
-            "You are trying to delete another user's blog"
-         );
-      }
+   const matchedUserAndAuthor = userId?.equals(authorId);
+
+   if (!matchedUserAndAuthor) {
+      throw new AppError(
+         httpStatus.FORBIDDEN,
+         "You are trying to delete another user's blog"
+      );
    }
 
    // Allows a logged-in user to delete their own blog by its ID.
