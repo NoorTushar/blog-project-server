@@ -37,17 +37,22 @@ const getAllBlogsFromDB = async (query: Record<string, unknown>) => {
 
    // filter: Filters blogs authored by the user with the given authorId.
    const filter = query?.filter ? { author: query.filter } : {};
-   const filterQuery = await searchQuery.find(filter);
+   const filterQuery = searchQuery.find(filter);
 
-   //sortOrder: Defines the sorting order. Accepts values asc (ascending) or desc (descending). (e.g., sortOrder=desc).
-   // const sortOrder = query?.sortOrder ? (query?.sortOrder as string) : "desc";
-   // const sortQuery = filterQuery.sort({ createdAt: sortOrder });
+   // sortOrder: Defines the sorting order. Accepts values asc (ascending) or desc (descending). (e.g., sortOrder=desc).
 
-   // //sortBy: Sort blogs by specific fields such as createdAt or title (e.g., sortBy=title).
-   // const fields = (query.sortBy as string) || "-__v";
-   // const fieldQuery = await sortQuery.select(fields);
+   let sortStr = "";
 
-   return filterQuery;
+   if (query?.sortBy && query?.sortOrder) {
+      const sortBy = query?.sortBy;
+      const sortOrder = query?.sortOrder;
+
+      sortStr = `${sortOrder === "desc" ? "-" : ""}${sortBy}`;
+   }
+
+   const sortQuery = await filterQuery.sort(sortStr);
+
+   return sortQuery;
 };
 
 const getSingleBlogFromDB = async (id: string) => {
