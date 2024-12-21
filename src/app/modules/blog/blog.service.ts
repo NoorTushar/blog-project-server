@@ -41,7 +41,7 @@ const getAllBlogsFromDB = async (query: Record<string, unknown>) => {
 
    // sortOrder: Defines the sorting order. Accepts values asc (ascending) or desc (descending). (e.g., sortOrder=desc).
 
-   let sortStr = "";
+   let sortStr;
 
    if (query?.sortBy && query?.sortOrder) {
       const sortBy = query?.sortBy;
