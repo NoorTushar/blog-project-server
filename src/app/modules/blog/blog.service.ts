@@ -8,10 +8,8 @@ const createBlogIntoDB = async (payload: TBlog) => {
 };
 
 const getAllBlogsFromDB = async (query: Record<string, unknown>) => {
-   const queryObj = { ...query };
-
+   // search: Filters blogs containing the term "technology" in the title or content.
    const search = query?.search || "";
-
    const searchQuery = BlogModel.find({
       $or: blogSearchTerms.map((term) => {
          return {
@@ -20,17 +18,19 @@ const getAllBlogsFromDB = async (query: Record<string, unknown>) => {
       }),
    });
 
-   const excludeFields = ["search"];
+   // filter: Filters blogs authored by the user with the given authorId.
+   const filter = query?.filter ? { author: query.filter } : {};
+   const filterQuery = searchQuery.find(filter);
 
-   excludeFields.forEach((field) => delete queryObj[field]);
-   console.log({ queryObj });
-   console.log({ query });
+   //sortOrder: Defines the sorting order. Accepts values asc (ascending) or desc (descending). (e.g., sortOrder=desc).
+   const sortOrder = query?.sortOrder ? (query?.sortOrder as string) : "desc";
+   const sortQuery = filterQuery.sort({ createdAt: sortOrder });
 
-   const filter = query.filter ? { _id: query.filter } : {};
+   //sortBy: Sort blogs by specific fields such as createdAt or title (e.g., sortBy=title).
+   const fields = (query.sortBy as string) || "-__v";
+   const fieldQuery = await sortQuery.select(fields);
 
-   const result = await searchQuery.find(filter);
-
-   return result;
+   return fieldQuery;
 };
 
 const getSingleBlogFromDB = async (id: string) => {
