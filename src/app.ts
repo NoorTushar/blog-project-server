@@ -5,10 +5,9 @@ import express, { Response, Request, Application, NextFunction } from "express";
 import cors from "cors";
 import notFound from "./app/middlewares/notFound";
 import router from "./app/routes";
-import httpStatus from "http-status";
-import globalErrorHandler from "./app/middlewares/globalErrorHandler";
 import { ZodError, ZodIssue } from "zod";
 import mongoose from "mongoose";
+import AppError from "./app/errors/AppError";
 
 const app: Application = express();
 
@@ -26,8 +25,8 @@ app.get("/", (req: Request, res: Response) => {
 
 // Error-handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-   let statusCode = err.statusCode || 400;
-   let message = err.message || "Something went wrong";
+   let statusCode = err?.statusCode || 400;
+   let message = err?.message || "Something went wrong";
    let error: {
       details: { path: string | number; message: string }[]; // Updated to handle an array
    } = {
@@ -82,10 +81,12 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
       const message = "Invalid Id";
 
       const error = {
-         details: {
-            path: err.path,
-            message: err.message,
-         },
+         details: [
+            {
+               path: err.path,
+               message: err.message,
+            },
+         ],
       };
 
       return {
@@ -98,19 +99,20 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
    const handleDuplicateError = (err: any) => {
       const statusCode = 400;
       const message = "Duplicate value";
-      console.log("duplicate error: ", err.errorResponse.errmsg);
 
       // Extract value within double quotes using regex
-      const match = err.errorResponse.errmsg.match(/"([^"]*)"/);
+      const match = err.errorResponse?.errmsg?.match(/"([^"]*)"/);
 
       // The extracted value will be in the first capturing group
       const extractedMessage = match && match[1];
 
       const error = {
-         details: {
-            path: "",
-            message: `${extractedMessage} already exists.`,
-         },
+         details: [
+            {
+               path: "",
+               message: `${extractedMessage || "Value"} already exists.`,
+            },
+         ],
       };
 
       return {
@@ -141,6 +143,27 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
       statusCode = simplifiedError.statusCode;
       message = simplifiedError.message;
       error = simplifiedError.error;
+   } else if (err instanceof AppError) {
+      statusCode = err?.statusCode;
+      message = err.message;
+      error = {
+         details: [
+            {
+               path: "",
+               message: err?.message,
+            },
+         ],
+      };
+   } else if (err instanceof Error) {
+      message = err.message;
+      error = {
+         details: [
+            {
+               path: "",
+               message: err?.message,
+            },
+         ],
+      };
    }
 
    // Ultimate return
