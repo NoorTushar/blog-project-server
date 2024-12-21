@@ -172,7 +172,6 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
       message,
       statusCode,
       error,
-      amarError: err,
       stack: err?.stack || null,
    });
 });

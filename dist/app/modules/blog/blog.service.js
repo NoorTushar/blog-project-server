@@ -42,17 +42,22 @@ const getAllBlogsFromDB = (query) => __awaiter(void 0, void 0, void 0, function*
     }).populate("author");
     // filter: Filters blogs authored by the user with the given authorId.
     const filter = (query === null || query === void 0 ? void 0 : query.filter) ? { author: query.filter } : {};
-    const filterQuery = yield searchQuery.find(filter);
-    //sortOrder: Defines the sorting order. Accepts values asc (ascending) or desc (descending). (e.g., sortOrder=desc).
-    // const sortOrder = query?.sortOrder ? (query?.sortOrder as string) : "desc";
-    // const sortQuery = filterQuery.sort({ createdAt: sortOrder });
-    // //sortBy: Sort blogs by specific fields such as createdAt or title (e.g., sortBy=title).
-    // const fields = (query.sortBy as string) || "-__v";
-    // const fieldQuery = await sortQuery.select(fields);
-    return filterQuery;
+    const filterQuery = searchQuery.find(filter);
+    // sortOrder: Defines the sorting order. Accepts values asc (ascending) or desc (descending). (e.g., sortOrder=desc).
+    let sortStr = "";
+    if ((query === null || query === void 0 ? void 0 : query.sortBy) && (query === null || query === void 0 ? void 0 : query.sortOrder)) {
+        const sortBy = query === null || query === void 0 ? void 0 : query.sortBy;
+        const sortOrder = query === null || query === void 0 ? void 0 : query.sortOrder;
+        sortStr = `${sortOrder === "desc" ? "-" : ""}${sortBy}`;
+    }
+    const sortQuery = yield filterQuery.sort(sortStr);
+    return sortQuery;
 });
 const getSingleBlogFromDB = (id) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield blog_model_1.BlogModel.findById(id).populate("author");
+    if (!result) {
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "There is no blog under this Id");
+    }
     return result;
 });
 const updateBlogIntoDB = (decodedUser, id, payload) => __awaiter(void 0, void 0, void 0, function* () {
