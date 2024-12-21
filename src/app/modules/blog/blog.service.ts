@@ -43,6 +43,15 @@ const getSingleBlogFromDB = async (id: string) => {
 };
 
 const updateBlogIntoDB = async (id: string, payload: Partial<TBlog>) => {
+   // the blog to be updated
+   const blog = await BlogModel.findById(id);
+   if (!blog) {
+      throw new AppError(
+         httpStatus.NOT_FOUND,
+         "The blog you are trying to update, does not exist"
+      );
+   }
+
    // Allows a logged-in user to update their own blog by its ID.
 
    const result = await BlogModel.findByIdAndUpdate(id, payload, {
@@ -65,7 +74,6 @@ const deleteBlogFromDB = async (decodedUser: JwtPayload, id: string) => {
 
    // check if the id found in decoded user matches with the id to be deleted
    const user = await UserModel.findOne({ email: decodedUser.email });
-
    const userId = user?._id;
 
    // if the role is user, check if the right user is deleting their blog
